@@ -21,6 +21,7 @@ class cfdi_extract{
         $impuestos_totales = $xml->xpath('//cfdi:Comprobante//cfdi:Impuestos');
         $complemento = $xml->xpath('//cfdi:Comprobante//cfdi:Complemento');
         $timbre = $xml->xpath('//cfdi:Comprobante//t:TimbreFiscalDigital');
+        $relacionados = $xml->xpath('//cfdi:Comprobante//cfdi:CfdiRelacionados');
 
 
 
@@ -39,27 +40,34 @@ class cfdi_extract{
         //conceptos
         for($i=0; $i<count($concepto); $i++){
             $impuestos = $concepto[$i]->xpath('cfdi:Impuestos');
-            $data['Conceptos'][$i]['Cantidad'] = (string)$concepto[$i]->attributes()->Cantidad;
-            $data['Conceptos'][$i]['ClaveUnidad'] = (string)$concepto[$i]->attributes()->ClaveUnidad;
-            $data['Conceptos'][$i]['NoIdentificacion'] = (string)$concepto[$i]->attributes()->NoIdentificacion;
-            $data['Conceptos'][$i]['Descripcion'] = (string)$concepto[$i]->attributes()->Descripcion;
-            $data['Conceptos'][$i]['ValorUnitario'] = (string)$concepto[$i]->attributes()->ValorUnitario;
-            $data['Conceptos'][$i]['Importe'] = (string)$concepto[$i]->attributes()->Importe;
-            $data['Conceptos'][$i]['ClaveProdServ'] = (string)$concepto[$i]->attributes()->ClaveProdServ;
+            $data['Conceptos']['Concepto'][$i]['Cantidad'] = (string)$concepto[$i]->attributes()->Cantidad;
+            $data['Conceptos']['Concepto'][$i]['ClaveUnidad'] = (string)$concepto[$i]->attributes()->ClaveUnidad;
+            $data['Conceptos']['Concepto'][$i]['NoIdentificacion'] = (string)$concepto[$i]->attributes()->NoIdentificacion;
+            $data['Conceptos']['Concepto'][$i]['Descripcion'] = (string)$concepto[$i]->attributes()->Descripcion;
+            $data['Conceptos']['Concepto'][$i]['ValorUnitario'] = (string)$concepto[$i]->attributes()->ValorUnitario;
+            $data['Conceptos']['Concepto'][$i]['Importe'] = (string)$concepto[$i]->attributes()->Importe;
+            $data['Conceptos']['Concepto'][$i]['ClaveProdServ'] = (string)$concepto[$i]->attributes()->ClaveProdServ;
 
             //obtener traslados
             if(count($impuestos)>0){
                 $traslados = $impuestos[0]->xpath('cfdi:Traslados//cfdi:Traslado');
                 for($j=0; $j<count($traslados); $j++){
-                    $data['Conceptos'][$i]['Impuestos']['Traslados']['Base'] = (string)$traslados[$j]->attributes()->Base;
-                    $data['Conceptos'][$i]['Impuestos']['Traslados']['Impuesto'] = (string)$traslados[$j]->attributes()->Impuesto;
-                    $data['Conceptos'][$i]['Impuestos']['Traslados']['TipoFactor'] = (string)$traslados[$j]->attributes()->TipoFactor;
-                    $data['Conceptos'][$i]['Impuestos']['Traslados']['TasaOCuota'] = (string)substr($traslados[$j]->attributes()->TasaOCuota, 0, -4);
-                    $data['Conceptos'][$i]['Impuestos']['Traslados']['Importe'] = (string)$traslados[$j]->attributes()->Importe;
+                    $data['Conceptos']['Concepto'][$i]['Impuestos']['Traslados']['Traslado']['Base'] = (string)$traslados[$j]->attributes()->Base;
+                    $data['Conceptos']['Concepto'][$i]['Impuestos']['Traslados']['Traslado']['Impuesto'] = (string)$traslados[$j]->attributes()->Impuesto;
+                    $data['Conceptos']['Concepto'][$i]['Impuestos']['Traslados']['Traslado']['TipoFactor'] = (string)$traslados[$j]->attributes()->TipoFactor;
+                    $data['Conceptos']['Concepto'][$i]['Impuestos']['Traslados']['Traslado']['TasaOCuota'] = (string)substr($traslados[$j]->attributes()->TasaOCuota, 0, -4);
+                    $data['Conceptos']['Concepto'][$i]['Impuestos']['Traslados']['Traslado']['Importe'] = (string)$traslados[$j]->attributes()->Importe;
                 }
             }
             
 
+        }
+
+        //cfdi relacionados
+        if(count($relacionados)>0){
+            $data['Relacionados']['TipoRelacion'] = (string)$relacionados[0]->attributes()->TipoRelacion;
+            $relacionado = $relacionados[0]->xpath('cfdi:CfdiRelacionado');
+            $data['Relacionados']['CfdiRelacionado'] = (string)$relacionado[0]->attributes()->UUID;
         }
 
         //impuestos totales del ultimo impusto
@@ -69,10 +77,10 @@ class cfdi_extract{
         //impuestos totales del ultimo impuesto (traslados)
         $traslados = end($impuestos_totales)->xpath('cfdi:Traslados//cfdi:Traslado');
         for($i=0; $i<count($traslados); $i++){
-            $data['Impuestos']['Traslados']['Impuesto'] = (string)$traslados[$i]->attributes()->Impuesto;
-            $data['Impuestos']['Traslados']['TipoFactor'] = (string)$traslados[$i]->attributes()->TipoFactor;
-            $data['Impuestos']['Traslados']['TasaOCuota'] = (string)substr($traslados[$i]->attributes()->TasaOCuota, 0, -4);
-            $data['Impuestos']['Traslados']['Importe'] = (string)$traslados[$i]->attributes()->Importe;
+            $data['Impuestos']['Traslados']['Traslado']['Impuesto'] = (string)$traslados[$i]->attributes()->Impuesto;
+            $data['Impuestos']['Traslados']['Traslado']['TipoFactor'] = (string)$traslados[$i]->attributes()->TipoFactor;
+            $data['Impuestos']['Traslados']['Traslado']['TasaOCuota'] = (string)substr($traslados[$i]->attributes()->TasaOCuota, 0, -4);
+            $data['Impuestos']['Traslados']['Traslado']['Importe'] = (string)$traslados[$i]->attributes()->Importe;
         }
 
         //complemento
