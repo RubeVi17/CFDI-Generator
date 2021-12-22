@@ -6,16 +6,16 @@ Este script convierte el xml de un cfdi a PDF
 
 Este script esta listo para funcionar y solo añadir tu logo, solo agrega tu `logo.png` al path de origen
 
-** Nota **
+**Nota**
 Por el momento la extraccion desde archivos xml solo funciona con
 
-[x] CFDI de Ingreso
+- [x] CFDI de Ingreso
 
 Con la API de SAT.WS puedes generar
 
-[x] CFDI de Ingreso
-[X] CFDI de Pago
-[X] CFDI de Egreso
+- [x] CFDI de Ingreso
+- [X] CFDI de Pago
+- [X] CFDI de Egreso
 
 ## Uso
 
@@ -40,7 +40,7 @@ Agrega el archivo y espera a que se descargue a tu ordenador
 #### API SAT.WS
 Este script funciona con la API de [SatWS](https://sat.ws/)
 
-** OJO ***
+**OJO***
 No hace ningun tipo de conexion con la API, simplemente se ajusta al formato extraido de la API.
 Puedes cambiar la URL de la obtencion de la informacion en formato JSON en la linea #36 del archivo `cfdi.php`
 
