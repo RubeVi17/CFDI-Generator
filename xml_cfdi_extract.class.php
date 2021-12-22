@@ -13,6 +13,7 @@ class cfdi_extract{
         $data = array();
         $namesapce = $xml->getNamespaces(true);
         $xml->registerXPathNamespace('t', $namesapce['tfd']);
+        $xml->registerXPathNamespace('pago10', $namesapce['pago10']);
 
         $comprobante = $xml->xpath('//cfdi:Comprobante');
         $emisor = $xml->xpath('//cfdi:Comprobante//cfdi:Emisor');
@@ -22,6 +23,7 @@ class cfdi_extract{
         $complemento = $xml->xpath('//cfdi:Comprobante//cfdi:Complemento');
         $timbre = $xml->xpath('//cfdi:Comprobante//t:TimbreFiscalDigital');
         $relacionados = $xml->xpath('//cfdi:Comprobante//cfdi:CfdiRelacionados');
+        $pagos = $xml->xpath('//cfdi:Comprobante//pago10:Pagos');
 
 
 
@@ -70,18 +72,45 @@ class cfdi_extract{
             $data['Relacionados']['CfdiRelacionado'] = (string)$relacionado[0]->attributes()->UUID;
         }
 
-        //impuestos totales del ultimo impusto
-        foreach(end($impuestos_totales)->attributes() as $key => $value){
-            $data['Impuestos'][$key] = (string)$value;
+        if($comprobante[0]->attributes()->TipoDeComprobante != 'P'){
+
+            //impuestos totales del ultimo impusto
+            foreach(end($impuestos_totales)->attributes() as $key => $value){
+                $data['Impuestos'][$key] = (string)$value;
+            }
+            //impuestos totales del ultimo impuesto (traslados)
+            $traslados = end($impuestos_totales)->xpath('cfdi:Traslados//cfdi:Traslado');
+            for($i=0; $i<count($traslados); $i++){
+                $data['Impuestos']['Traslados']['Traslado']['Impuesto'] = (string)$traslados[$i]->attributes()->Impuesto;
+                $data['Impuestos']['Traslados']['Traslado']['TipoFactor'] = (string)$traslados[$i]->attributes()->TipoFactor;
+                $data['Impuestos']['Traslados']['Traslado']['TasaOCuota'] = (string)substr($traslados[$i]->attributes()->TasaOCuota, 0, -4);
+                $data['Impuestos']['Traslados']['Traslado']['Importe'] = (string)$traslados[$i]->attributes()->Importe;
+            }
         }
-        //impuestos totales del ultimo impuesto (traslados)
-        $traslados = end($impuestos_totales)->xpath('cfdi:Traslados//cfdi:Traslado');
-        for($i=0; $i<count($traslados); $i++){
-            $data['Impuestos']['Traslados']['Traslado']['Impuesto'] = (string)$traslados[$i]->attributes()->Impuesto;
-            $data['Impuestos']['Traslados']['Traslado']['TipoFactor'] = (string)$traslados[$i]->attributes()->TipoFactor;
-            $data['Impuestos']['Traslados']['Traslado']['TasaOCuota'] = (string)substr($traslados[$i]->attributes()->TasaOCuota, 0, -4);
-            $data['Impuestos']['Traslados']['Traslado']['Importe'] = (string)$traslados[$i]->attributes()->Importe;
+
+        //pagos en caso de ser complemento de pago
+        if($pagos){
+            $data["Complemento"]['Pagos']['Version'] = (string)$pagos[0]->attributes()->Version;
+            $pago = $pagos[0]->xpath('pago10:Pago');
+            foreach($pago[0]->attributes() as $key => $value){
+                $data["Complemento"]['Pagos']['Pago'][$key] = (string)$value;
+                $doctoRelacionado = $pago[0]->xpath('pago10:DoctoRelacionado');
+                for($i=0; $i<count($doctoRelacionado); $i++){
+                    
+                    $data["Complemento"]['Pagos']['Pago']['DoctoRelacionado'][$i]['IdDocumento'] = (string)$doctoRelacionado[$i]->attributes()->IdDocumento;
+                    $data["Complemento"]['Pagos']['Pago']['DoctoRelacionado'][$i]['Folio'] = (string)$doctoRelacionado[$i]->attributes()->Folio;
+                    $data["Complemento"]['Pagos']['Pago']['DoctoRelacionado'][$i]['Serie'] = (string)$doctoRelacionado[$i]->attributes()->Serie;
+                    $data["Complemento"]['Pagos']['Pago']['DoctoRelacionado'][$i]['MonedaDR'] = (string)$doctoRelacionado[$i]->attributes()->MonedaDR;
+                    $data["Complemento"]['Pagos']['Pago']['DoctoRelacionado'][$i]['MetodoDePagoDR'] = (string)$doctoRelacionado[$i]->attributes()->MetodoDePagoDR;
+                    $data["Complemento"]['Pagos']['Pago']['DoctoRelacionado'][$i]['NumParcialidad'] = (string)$doctoRelacionado[$i]->attributes()->NumParcialidad;
+                    $data["Complemento"]['Pagos']['Pago']['DoctoRelacionado'][$i]['ImpPagado'] = (string)$doctoRelacionado[$i]->attributes()->ImpPagado;
+                    $data["Complemento"]['Pagos']['Pago']['DoctoRelacionado'][$i]['ImpSaldoAnt'] = (string)$doctoRelacionado[$i]->attributes()->ImpSaldoAnt;
+                    $data["Complemento"]['Pagos']['Pago']['DoctoRelacionado'][$i]['ImpSaldoInsoluto'] = (string)$doctoRelacionado[$i]->attributes()->ImpSaldoInsoluto;
+                }
+            }
+            
         }
+
 
         //complemento
         foreach($timbre[0]->attributes() as $key => $value){
