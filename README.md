@@ -10,6 +10,7 @@ Este script esta listo para funcionar y solo añadir tu logo, solo agrega tu `lo
 Por el momento la extraccion desde archivos xml solo funciona con
 
 - [x] CFDI de Ingreso
+- [x] CFDI de Pago
 
 Con la API de SAT.WS puedes generar
 
