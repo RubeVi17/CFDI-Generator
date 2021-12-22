@@ -272,7 +272,7 @@ class cfdi_pdf extends FPDF{
         $this->SetTextColor(106,106,106);
         $this->SetY(-56);
         $this->Line(10,$this->GetY(),200,$this->GetY());
-        $this->Image("http://localhost/qr_code.php?uuid=".$this->data['Complemento']['TimbreFiscalDigital']['UUID']."&emisor=".$this->data['Emisor']['Rfc']."&receptor=".$this->data['Receptor']['Rfc']."&total=".$this->data['Total']."&sello=".substr($this->data['Sello'],-8),10,$this->GetY()+.5,30,0,'PNG');
+        $this->Image("http://testing.crssoftware.mx/qr_code.php?uuid=".$this->data['Complemento']['TimbreFiscalDigital']['UUID']."&emisor=".$this->data['Emisor']['Rfc']."&receptor=".$this->data['Receptor']['Rfc']."&total=".$this->data['Total']."&sello=".substr($this->data['Sello'],-8),10,$this->GetY()+.5,30,0,'PNG');
         $this->SetXY(40,-54);
         $this->Cell(65,5,'Folio Fiscal',0,0,'L',true);
         $this->Cell(5);
@@ -318,8 +318,6 @@ class cfdi_pdf extends FPDF{
         $this->MultiCell(65,2,$this->complement_original_chain(),0,'L');
 
 
-
-
         $this->SetY(-15);
         $this->SetFont('Arial','I',8);
         $this->Cell(15,10,'Desarrollado por CRS Software MX',0,0,'L');
@@ -361,11 +359,12 @@ class cfdi_pdf extends FPDF{
                 $this->Ln();
                 $this->Cell(28);
                 $this->Cell(17,5,$this->convert_unity_code($row["ClaveUnidad"]),0,0,'L');
+                $y3 = $this->GetY();
                 $this->SetXY($this->GetX(),$y);
                 $x = $this->GetX();
                 $this->MultiCell(65,3,utf8_decode($row["Descripcion"]),0,'L');
                 $y2 = $this->GetY();
-                $this->SetX($x);
+                $this->SetXY($x,$y3);
                 $this->Cell(65,5,'Codigo SAT:'.$row["ClaveProdServ"],0,0,'L');
                 $this->SetXY($x+65,$y);
                 $this->SetFont('Arial','',8);
@@ -374,20 +373,37 @@ class cfdi_pdf extends FPDF{
                 $this->Cell(20,10,money_format('%.2n',$row["Descuento"]),0,0,'R');
                 $this->Cell(25,10,money_format('%.2n',$row["Importe"]),0,0,'R');
                 $this->Ln();
-                $this->SetFont('Arial','B',7);
+                $this->SetY($y3+5);
                 $this->Line(10,$this->GetY(),140,$this->GetY());
                 foreach($row["Impuestos"] as $impuestos => $value){
                     foreach($value as $keys => $values2){
-                        $this->Cell(13,5,$impuestos,0,0,'L');
-                        $this->SetFont('Arial','',7);
-                        $this->Cell(17,5,'Impuesto: '.$this->convert_taxes($values2["Impuesto"]),0,0,'L');
-                        $this->Cell(22,5,'Tipo Factor: '.$values2["TipoFactor"],0,0,'L');
-                        $this->Cell(25,5,'Tasa o Cuota: '.$values2["TasaOCuota"].'%',0,0,'L');
-                        $this->Cell(25,5,'Base: '.money_format('%.2n',$values2["Base"]),0,0,'L');
-                        $this->Cell(20,5,'Importe: '.money_format('%.2n',$values2["Importe"]),0,0,'L');
+                        
+                        if($values2["Impuesto"]){
+                            $this->SetFont('Arial','B',7);
+                            $this->Cell(17,5,$impuestos,0,0,'L');
+                            $this->SetFont('Arial','',7);
+                            $this->Cell(17,5,'Impuesto: '.$this->convert_taxes($values2["Impuesto"]),0,0,'L');
+                            $this->Cell(22,5,'Tipo Factor: '.$values2["TipoFactor"],0,0,'L');
+                            $this->Cell(27,5,'Tasa o Cuota: '.$values2["TasaOCuota"].'%',0,0,'L');
+                            $this->Cell(25,5,'Base: '.money_format('%.2n',$values2["Base"]),0,0,'L');
+                            $this->Cell(20,5,'Importe: '.money_format('%.2n',$values2["Importe"]),0,0,'L');
+                            $this->Ln();
+                        }else{
+                            foreach($values2 as $key => $value3){
+                                $this->SetFont('Arial','B',7);
+                                $this->Cell(17,5,$impuestos,0,0,'L');
+                                $this->SetFont('Arial','',7);
+                                $this->Cell(17,5,'Impuesto: '.$this->convert_taxes($value3["Impuesto"]),0,0,'L');
+                                $this->Cell(22,5,'Tipo Factor: '.$value3["TipoFactor"],0,0,'L');
+                                $this->Cell(27,5,'Tasa o Cuota: '.$value3["TasaOCuota"].'%',0,0,'L');
+                                $this->Cell(25,5,'Base: '.money_format('%.2n',$value3["Base"]),0,0,'L');
+                                $this->Cell(20,5,'Importe: '.money_format('%.2n',$value3["Importe"]),0,0,'L');
+                                $this->Ln();
+                            }
+                        }
+
                     }
                 }
-                $this->Ln();
                 $this->SetDrawColor(196,196,196);
                 $this->SetLineWidth(0.2);
                 $this->Line(10,$this->GetY(),200,$this->GetY());
@@ -404,17 +420,25 @@ class cfdi_pdf extends FPDF{
             $this->Cell(20,5,'Descuento',0,0,'R');
             $this->Cell(25,5,money_format('%.2n',$this->data["Descuento"]),0,0,'R');
             $this->Ln();
-            $this->SetX(155);
             foreach($this->data["Impuestos"] as $impuestos => $val){
                 if(is_array($val)){
                     foreach($val as $val2){
-                        $this->Cell(20,5,$this->convert_taxes($val2["Impuesto"]).' '.$impuestos.' ('.($val2["TasaOCuota"]*100).'%)',0,0,'R');
-                        $this->Cell(25,5,money_format('%.2n',$val2["Importe"]),0,0,'R');
-                        $this->Ln();
+                        if($val2["Impuesto"]){
+                            $this->SetX(155);
+                            $this->Cell(20,5,$this->convert_taxes($val2["Impuesto"]).' '.$impuestos.' ('.($val2["TasaOCuota"]*100).'%)',0,0,'R');
+                            $this->Cell(25,5,money_format('%.2n',$val2["Importe"]),0,0,'R');
+                            $this->Ln();
+                        }else{
+                            foreach($val2 as $val3){
+                                $this->SetX(155);
+                                $this->Cell(20,5,$this->convert_taxes($val3["Impuesto"]).' '.$impuestos,0,0,'R');
+                                $this->Cell(25,5,money_format('%.2n',$val3["Importe"]),0,0,'R');
+                                $this->Ln();
+                            }
+                        }
                     }
                 }
             }
-            $this->Ln();
             //convertir importe a letras
             $importe_string = NumberFormatter::create('es_MX', NumberFormatter::SPELLOUT)->format($this->data["Total"]);
             $this->SetFont('Arial','B',8);
@@ -683,11 +707,12 @@ class cfdi_pdf extends FPDF{
                 $this->Ln();
                 $this->Cell(28);
                 $this->Cell(17,5,$this->convert_unity_code($row["ClaveUnidad"]),0,0,'L');
+                $y3 = $this->GetY();
                 $this->SetXY($this->GetX(),$y);
                 $x = $this->GetX();
                 $this->MultiCell(65,3,utf8_decode($row["Descripcion"]),0,'L');
                 $y2 = $this->GetY();
-                $this->SetX($x);
+                $this->SetXY($x,$y3);
                 $this->Cell(65,5,'Codigo SAT:'.$row["ClaveProdServ"],0,0,'L');
                 $this->SetXY($x+65,$y);
                 $this->SetFont('Arial','',8);
@@ -697,6 +722,7 @@ class cfdi_pdf extends FPDF{
                 $this->Cell(25,10,money_format('%.2n',$row["Importe"]),0,0,'R');
                 $this->Ln();
                 $this->SetFont('Arial','B',7);
+                $this->SetY($y3+5);
                 $this->Line(10,$this->GetY(),140,$this->GetY());
                 foreach($row["Impuestos"] as $impuestos => $value){
                     foreach($value as $keys => $values2){

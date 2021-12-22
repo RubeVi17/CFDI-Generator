@@ -60,6 +60,29 @@ class cfdi_extract{
                     $data['Conceptos']['Concepto'][$i]['Impuestos']['Traslados']['Traslado']['TasaOCuota'] = (string)substr($traslados[$j]->attributes()->TasaOCuota, 0, -4);
                     $data['Conceptos']['Concepto'][$i]['Impuestos']['Traslados']['Traslado']['Importe'] = (string)$traslados[$j]->attributes()->Importe;
                 }
+
+                //obtener retenciones
+                $retenciones = $impuestos[0]->xpath('cfdi:Retenciones//cfdi:Retencion');
+                if($retenciones){
+
+                    if(count($retenciones) > 1){
+                        for($j=0; $j<count($retenciones); $j++){
+                            $data['Conceptos']['Concepto'][$i]['Impuestos']['Retenciones']['Retencion'][$j]['Base'] = (string)$retenciones[$j]->attributes()->Base;
+                            $data['Conceptos']['Concepto'][$i]['Impuestos']['Retenciones']['Retencion'][$j]['Impuesto'] = (string)$retenciones[$j]->attributes()->Impuesto;
+                            $data['Conceptos']['Concepto'][$i]['Impuestos']['Retenciones']['Retencion'][$j]['TipoFactor'] = (string)$retenciones[$j]->attributes()->TipoFactor;
+                            $data['Conceptos']['Concepto'][$i]['Impuestos']['Retenciones']['Retencion'][$j]['TasaOCuota'] = (string)substr($retenciones[$j]->attributes()->TasaOCuota, 0, -2);
+                            $data['Conceptos']['Concepto'][$i]['Impuestos']['Retenciones']['Retencion'][$j]['Importe'] = (string)$retenciones[$j]->attributes()->Importe;
+                        }
+                    }else{
+                        $data['Conceptos']['Concepto'][$i]['Impuestos']['Retenciones']['Retencion']['Base'] = (string)$retenciones[0]->attributes()->Base;
+                        $data['Conceptos']['Concepto'][$i]['Impuestos']['Retenciones']['Retencion']['Impuesto'] = (string)$retenciones[0]->attributes()->Impuesto;
+                        $data['Conceptos']['Concepto'][$i]['Impuestos']['Retenciones']['Retencion']['TipoFactor'] = (string)$retenciones[0]->attributes()->TipoFactor;
+                        $data['Conceptos']['Concepto'][$i]['Impuestos']['Retenciones']['Retencion']['TasaOCuota'] = (string)substr($retenciones[0]->attributes()->TasaOCuota, 0, -2);
+                        $data['Conceptos']['Concepto'][$i]['Impuestos']['Retenciones']['Retencion']['Importe'] = (string)$retenciones[0]->attributes()->Importe;
+                    }
+
+                }
+                
             }
             
 
@@ -85,6 +108,22 @@ class cfdi_extract{
                 $data['Impuestos']['Traslados']['Traslado']['TipoFactor'] = (string)$traslados[$i]->attributes()->TipoFactor;
                 $data['Impuestos']['Traslados']['Traslado']['TasaOCuota'] = (string)substr($traslados[$i]->attributes()->TasaOCuota, 0, -4);
                 $data['Impuestos']['Traslados']['Traslado']['Importe'] = (string)$traslados[$i]->attributes()->Importe;
+            }
+
+            //impuestos totales del ultimo impuesto (retenciones)
+            $retenciones = end($impuestos_totales)->xpath('cfdi:Retenciones//cfdi:Retencion');
+            if($retenciones){
+                
+                if(count($retenciones) > 1){
+                    for($i=0; $i<count($retenciones); $i++){
+                        $data['Impuestos']['Retenciones']['Retencion'][$i]['Impuesto'] = (string)$retenciones[$i]->attributes()->Impuesto;
+                        $data['Impuestos']['Retenciones']['Retencion'][$i]['Importe'] = (string)$retenciones[$i]->attributes()->Importe;
+                    }
+                }else{
+                    $data['Impuestos']['Retenciones']['Retencion']['Impuesto'] = (string)$retenciones[0]->attributes()->Impuesto;
+                    $data['Impuestos']['Retenciones']['Retencion']['Importe'] = (string)$retenciones[0]->attributes()->Importe;
+                }
+
             }
         }
 
